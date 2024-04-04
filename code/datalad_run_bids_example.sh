@@ -2,7 +2,7 @@ module purge
 module load datalad/0.19.6
 
 bids_dir=$1
-shell_script=$2
+transformation_shell_script=$2
 
 cd $bids_dir || exit
 for sub_dir in $(find . -mindepth 1 -maxdepth 1 -type d)
@@ -21,7 +21,8 @@ do
           nifti_file=${nifti_file:2}
           extension=${nifti_file: -7}
             if [ "${extension}" = ".nii.gz" ]; then
-              echo "nifti_file: $nifti_file"
+              nifti_path="${bids_dir}/${sub_name}/${session_name}/anat/$nifti_file"
+              $transformation_shell_script $nifti_path
             fi
           done
         cd "../.."
