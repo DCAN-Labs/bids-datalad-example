@@ -1,14 +1,38 @@
+module purge
+module load datalad/0.19.6
+
 bids_dir=$1
 
-cat << EOT > code/list_titles.sh
-for i in ${bids_dir}/subs-*/ses-*/*.mp3; do
-get the filename
-   base=\$(basename "\$i");
-strip the extension
-   base=\${base%.mp3};
-date as yyyy-mm-dd
-   printf "\${base%%__*}\t" | tr '_' '-';
-name and title without underscores
-   printf "\${base#*__}\n" | tr '_' ' ';
+cd $bids_dir || exit
+for sub_dir in $(find . -mindepth 1 -maxdepth 1 -type d)
+do
+  if [ "${sub_dir:2:1}" != "." ]; then
+    sub_name=${sub_dir:2:10}
+    cd "${bids_dir}/${sub_name}"
+    for session_dir in $(find . -mindepth 1 -maxdepth 1 -type d)
+    do
+      if [ "${session_dir:0:3}" != "./." ]; then
+        session_name=${session_dir:0-7}
+        cd "${bids_dir}/${sub_name}/${session_name}/anat"
+        # Make a transformation
+        pwd
+        for nifti_file in $(find -L . -mindepth 1 -maxdepth 1 -xtype l)
+          do
+          echo "NIFTI file: ${nifti_file}"
+            if [ "{$nifti_file: -7}" = ".nii.gz" ]; then
+              echo "nifti_file: $nifti_file"
+            fi
+          done
+        cd "../.."
+      fi
+      datalad save -m "Adding session data: ${sub_name}:${session_name}."
+      datalad status
+    done
+    cd "../$sub_dir" || exit
+    datalad save -m "Saving subject project: ${sub_name}."
+    datalad status
+  fi
 done
-EOT
+cd $bids_dir || exit
+datalad save -m "Saving repo project."
+datalad status
