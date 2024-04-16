@@ -22,7 +22,7 @@ do
           extension=${nifti_file: -7}
             if [ "${extension}" = ".nii.gz" ]; then
               nifti_path="${bids_dir}/${sub_name}/${session_name}/anat/$nifti_file"
-              $transformation_shell_script $nifti_path
+              datalad run -m "Running user-defined shell script" "bash $transformation_shell_script $nifti_path"
             fi
           done
         cd "../.."
@@ -38,3 +38,4 @@ done
 cd $bids_dir || exit
 datalad save -m "Saving repo project."
 datalad status
+git log -p -n 1
